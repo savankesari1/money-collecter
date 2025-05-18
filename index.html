@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Money Collector</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
+      color: #fff;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      border-radius: 1rem;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .form-control,
+    .form-label {
+      color: #fff;
+    }
+
+    .form-control::placeholder {
+      color: #ccc;
+    }
+
+    .table {
+      color: #fff;
+    }
+
+    .table-striped > tbody > tr:nth-of-type(odd) {
+      background-color: rgba(255, 255, 255, 0.05);
+    }
+
+    .summary li {
+      list-style: none;
+      padding: 5px 0;
+    }
+  </style>
+</head>
+<body class="p-4">
+  <div class="container">
+    <div class="text-center mb-5">
+      <h1 class="fw-bold">MAHADEVI COMPUTERS DATA</h1>
+      <p class="text-light">Track contributions and commissions with ease.</p>
+    </div>
+
+    <div class="row g-4">
+      <div class="col-md-5">
+        <div class="card p-4">
+          <h4 class="mb-3">Add Entry</h4>
+          <form id="entryForm">
+            <div class="mb-3">
+              <label for="name" class="form-label">Person Name</label>
+              <input type="text" class="form-control" id="name" placeholder="John Doe" required />
+            </div>
+            <div class="mb-3">
+              <label for="givenAmount" class="form-label">Amount Given</label>
+              <input type="number" class="form-control" id="givenAmount" placeholder="1000" required />
+            </div>
+            <div class="mb-3">
+              <label for="commission" class="form-label">Commission</label>
+              <input type="number" class="form-control" id="commission" placeholder="50" required />
+            </div>
+            <button type="submit" class="btn btn-outline-light w-100">Submit</button>
+          </form>
+        </div>
+      </div>
+
+      <div class="col-md-7">
+        <div class="card p-4 mb-4">
+          <h4 class="mb-3">Summary</h4>
+          <ul class="summary">
+            <li><strong>Total Given:</strong> ₹<span id="totalGiven">0</span></li>
+            <li><strong>Total Commission:</strong> ₹<span id="totalCommission">0</span></li>
+            <li><strong>Total Net Amount:</strong> ₹<span id="totalNet">0</span></li>
+          </ul>
+        </div>
+
+        <div class="card p-4">
+          <h4 class="mb-3">Entries</h4>
+          <div class="table-responsive">
+            <table class="table table-striped table-hover">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Given</th>
+                  <th>Commission</th>
+                  <th>Net</th>
+                  <th>Timestamp</th>
+                </tr>
+              </thead>
+              <tbody id="entriesTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = 'https://money-collector-with-drive.onrender.com'; // Update as needed
+
+    document.getElementById('entryForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = document.getElementById('name').value;
+      const givenAmount = document.getElementById('givenAmount').value;
+      const commission = document.getElementById('commission').value;
+
+      const res = await fetch(`${API_URL}/submit`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, given_amount: givenAmount, commission }),
+      });
+
+      const data = await res.json();
+      updateUI(data);
+      document.getElementById('entryForm').reset();
+    });
+
+    async function loadData() {
+      const res = await fetch(`${API_URL}/data`);
+      const data = await res.json();
+      updateUI(data);
+    }
+
+    function updateUI(data) {
+      const entriesTable = document.getElementById('entriesTable');
+      entriesTable.innerHTML = '';
+      data.entries.forEach(entry => {
+        const row = `<tr>
+          <td>${entry["Name"]}</td>
+          <td>₹${entry["Given Amount"]}</td>
+          <td>₹${entry["Commission"]}</td>
+          <td>₹${entry["Net Amount"]}</td>
+          <td>${new Date(entry["Timestamp"]).toLocaleString()}</td>
+        </tr>`;
+        entriesTable.innerHTML += row;
+      });
+
+      document.getElementById('totalGiven').textContent = data.summary.total_given;
+      document.getElementById('totalCommission').textContent = data.summary.total_commission;
+      document.getElementById('totalNet').textContent = data.summary.total_net;
+    }
+
+    window.onload = loadData;
+  </script>
+</body>
+</html>
